@@ -21,10 +21,11 @@ function TargetDesignerInner({ config, onBack }) {
   return (
     <div className="td-screen">
       <ScreenHintModal screenId="targetdesigner" title="Target Designer Workflow Guide">
-        <HintSection label="Import Curve">
+        <HintSection label="Import Curve (and optionally measurements)">
           <HintItem>Choose a Template from pre-defined template dropdown or load a target curve file.</HintItem>
-          <HintItem>Loading a template or target curve replaces the current baseline.</HintItem>
-          <HintBadge text="Tip" color="cyan">Use Save as Template after tuning so you can quickly reload your custom baseline.</HintBadge>
+          <HintItem>Import Measurements from REW or ADY files created by AcoustiX to help fine tune your curves</HintItem>
+          <HintItem>Use the measurement buttons to show or hide frequency response; right-click a measurement button to remove it.</HintItem>
+          <HintBadge text="Tip" color="cyan">Load ADY measurements into REW at the end of Measurement workflow and import here for more accuracy</HintBadge>
         </HintSection>
 
         <HintSection label="Tweak The Curve">

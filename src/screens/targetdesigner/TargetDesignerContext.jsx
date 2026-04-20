@@ -4,6 +4,7 @@ import { newTarget, defaultParams } from './curveEngine.js';
 const RESET_VIEW = { xMin: 3, xMax: 24000, yMin: -10, yMax: 120 };
 
 const initialState = {
+  measurements: [],
   targets: [newTarget('Target 1', 0)],
   activeTarget: 0,
   presets: [],
@@ -17,6 +18,29 @@ function reducer(state, action) {
   switch (action.type) {
     case 'SET_PRESETS':
       return { ...state, presets: action.presets };
+    case 'ADD_MEASUREMENT':
+      return { ...state, measurements: [...state.measurements, action.measurement] };
+    case 'REMOVE_MEASUREMENT':
+      return { ...state, measurements: state.measurements.filter((_, i) => i !== action.index) };
+    case 'TOGGLE_MEASUREMENT':
+      return {
+        ...state,
+        measurements: state.measurements.map((m, i) =>
+          i === action.index ? { ...m, visible: !m.visible } : m
+        ),
+      };
+    case 'SOLO_MEASUREMENT': {
+      const alreadySoloed = state.measurements.every((m, i) =>
+        i === action.index ? m.visible : !m.visible
+      );
+      return {
+        ...state,
+        measurements: state.measurements.map((m, i) => ({
+          ...m,
+          visible: alreadySoloed ? true : i === action.index,
+        })),
+      };
+    }
     case 'UPDATE_TARGET': {
       const targets = state.targets.slice();
       targets[state.activeTarget] = { ...targets[state.activeTarget], ...action.patch };

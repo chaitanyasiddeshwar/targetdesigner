@@ -5,6 +5,7 @@ import {
   fmtAxisHz,
   fmtHz,
   buildTargetSeries,
+  buildSmoothedMeasurement,
   getInteractiveHandles,
 } from './curveEngine.js';
 
@@ -56,7 +57,7 @@ export default function useCanvasDraw() {
   const draw = useCallback((canvas, state) => {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
-    const { view, targets, activeTarget, cursor, selectedHandleId, dragGuide, hoverHandle, showGlobalControl, showCurveControls } = state;
+    const { view, targets, activeTarget, measurements, cursor, selectedHandleId, dragGuide, hoverHandle, showGlobalControl, showCurveControls } = state;
 
     const xToPx = (f) => {
       const a = log10(view.xMin);
@@ -152,6 +153,11 @@ export default function useCanvasDraw() {
       ctx.stroke();
       ctx.restore();
     };
+
+    const visMeas = measurements.filter((m) => m.visible);
+    for (const m of visMeas) {
+      drawTrace(buildSmoothedMeasurement(m), m.color || '#00d4ff', 1.6);
+    }
 
     targets.forEach((tgt, i) => {
       if (i !== activeTarget) {

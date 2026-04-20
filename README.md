@@ -22,6 +22,12 @@ Standalone React + Vite app for the AcoustiX Target Designer screen.
 ## Packaging Output
 
 Each `build:pkg:*` command creates zip artifact(s) in `release/`.
+Zip names include a version suffix: `-v<version>.zip`.
+
+Version source:
+
+- default: `version` in `package.json`
+- optional override for a single build: `TD_RELEASE_VERSION=<value>`
 
 Each zip contains:
 
@@ -30,10 +36,15 @@ Each zip contains:
 
 Examples:
 
-- `release/target-designer-macos-arm64.zip`
-- `release/target-designer-macos-x64.zip`
-- `release/target-designer-linux-x64.zip`
-- `release/target-designer-win.zip`
+- `release/target-designer-macos-arm64-v1.0.0.zip`
+- `release/target-designer-macos-x64-v1.0.0.zip`
+- `release/target-designer-linux-x64-v1.0.0.zip`
+- `release/target-designer-win-v1.0.0.zip`
+
+Release workflow:
+
+1. Bump `version` in `package.json`.
+2. Run your desired `build:pkg:*` command.
 
 ## Running the Packaged App
 

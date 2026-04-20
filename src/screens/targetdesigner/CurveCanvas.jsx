@@ -8,11 +8,13 @@ import {
   fmtHz,
   getInteractiveHandles,
   parseREWText,
+  COLOR_PALETTE,
   computeTargetAt,
   generateExportText,
   defaultParams,
 } from './curveEngine.js';
 import ExportDialog from './ExportDialog.jsx';
+import ImportDialog from './ImportDialog.jsx';
 import InfoTip from '../../components/InfoTip.jsx';
 import * as tdApi from '../../services/tdApi.js';
 
@@ -118,6 +120,7 @@ export default function CurveCanvas() {
   const [hoverHandleId, setHoverHandleId] = useState(null);
   const [dragGuide, setDragGuide] = useState(null);
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [showSave, setShowSave] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saveOverwrite, setSaveOverwrite] = useState(false);
@@ -661,6 +664,25 @@ export default function CurveCanvas() {
     setSelectedHandleId(null);
   }, [dispatch]);
 
+  const handleImportMeasFile = useCallback(async () => {
+    const result = await tdApi.importADYMeasurements();
+    if (!result) return;
+    const imported = Array.isArray(result.measurements) ? result.measurements : [];
+    if (!imported.length) return;
+    imported.forEach((m, idx) => {
+      dispatch({
+        type: 'ADD_MEASUREMENT',
+        measurement: {
+          name: m.name,
+          visible: true,
+          color: COLOR_PALETTE[(state.measurements.length + idx) % COLOR_PALETTE.length],
+          pts: m.pts,
+          smoothing: '1/6',
+        },
+      });
+    });
+  }, [state.measurements.length, dispatch]);
+
   const handleSave = useCallback(async () => {
     if (!activeTarget) return;
     const text = generateExportText(activeTarget, saveResolution);
@@ -733,6 +755,14 @@ export default function CurveCanvas() {
           <InfoTip title="Load Target Curve File">
             <div>Imports text/FRD/CSV style target curves as the template baseline.</div>
           </InfoTip>
+          <button className="td-tb-btn" onClick={handleImportMeasFile}>Import Measurements from ADY</button>
+          <InfoTip title="Import Measurements from ADY">
+            <div>Loads measured responses from AcoustiX-generated ADY files.</div>
+          </InfoTip>
+          <button className="td-tb-btn" onClick={() => setShowImport(true)}>Import Measurements from REW</button>
+          <InfoTip title="Import Measurements from REW">
+            <div>Pulls traces from local REW API and overlays them on the graph.</div>
+          </InfoTip>
           <button
             className="td-tb-btn"
             onClick={() => {
@@ -745,11 +775,11 @@ export default function CurveCanvas() {
             Save as Template
           </button>
           <InfoTip title="Save as Template">
-            <div>Saves the current designed curve into the template list and makes it available to Optimize workflow.</div>
+            <div>Saves the current designed curve into the template list.</div>
           </InfoTip>
           <button className="td-tb-btn" onClick={() => setShowExport(true)}>Export Curve File</button>
           <InfoTip title="Export Curve File">
-            <div>Exports the rget curve</div>
+            <div>Exports the target curve</div>
           </InfoTip>
         </div>
 
@@ -802,6 +832,38 @@ export default function CurveCanvas() {
           </InfoTip>
         </div>
 
+        {state.measurements.length > 0 && (
+          <div className="td-toolbar-row td-toolbar-row-measurements">
+            <span className="td-tb-label">
+              MEASUREMENTS
+              <InfoTip title="Measurement Traces" wide>
+                <div>Click a measurement button to toggle visibility</div>
+                <div>Double-click to solo (show only that channel)</div>
+                <div>Right-click a measurement button to remove it</div>
+              </InfoTip>
+            </span>
+            {state.measurements.map((m, i) => (
+              <button
+                key={`${m.name}-${i}`}
+                className={`td-tb-btn td-meas-toggle${m.visible ? ' active' : ''}`}
+                style={{ borderColor: `${m.color}66`, color: m.visible ? m.color : 'var(--text-muted)' }}
+                onClick={() => dispatch({ type: 'TOGGLE_MEASUREMENT', index: i })}
+                onDoubleClick={(e) => {
+                  e.preventDefault();
+                  dispatch({ type: 'SOLO_MEASUREMENT', index: i });
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  dispatch({ type: 'REMOVE_MEASUREMENT', index: i });
+                }}
+                title={m.visible ? 'Hide (double-click to solo)' : 'Show (double-click to solo)'}
+              >
+                {m.name}
+              </button>
+            ))}
+          </div>
+        )}
+
       </div>
       
       <div className="td-canvas-wrap">
@@ -823,7 +885,7 @@ export default function CurveCanvas() {
             </div>
           </div>
         )}
-        {state.targets.length > 0 && (
+        {(state.targets.length > 0 || state.measurements.some((m) => m.visible)) && (
           <div className="td-legend">
             {state.targets.map((tgt, i) => (
               <div key={`t${i}`} className="td-legend-line">
@@ -831,6 +893,14 @@ export default function CurveCanvas() {
                 <span className="td-legend-label">{tgt.name}</span>
               </div>
             ))}
+            {state.measurements
+              .filter((m) => m.visible)
+              .map((m, i) => (
+                <div key={`m${i}`} className="td-legend-line">
+                  <span className="td-legend-swatch" style={{ background: m.color }} />
+                  <span className="td-legend-label">{m.name}</span>
+                </div>
+              ))}
           </div>
         )}
 
@@ -924,9 +994,10 @@ export default function CurveCanvas() {
         )}
       </div>
       <span className="td-tb-hint">
-        Right-click on the curve to add PEQ handles
+        Right-click on curve to add PEQ handles and Right-Click on measurement toggles to remove them
       </span>
       {showExport && <ExportDialog onClose={() => setShowExport(false)} />}
+      {showImport && <ImportDialog onClose={() => setShowImport(false)} />}
 
       {showSave && (
         <div className="td-dialog-backdrop" onClick={() => setShowSave(false)}>

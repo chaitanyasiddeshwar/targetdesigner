@@ -100,6 +100,11 @@
   gap: 8px;
 }
 
+.td-toolbar-row-measurements {
+  padding-top: 2px;
+  border-top: 1px dashed var(--border);
+}
+
 .td-tb-label {
   font-family: var(--font-mono);
   font-size: 0.56rem;
@@ -144,6 +149,13 @@
 .td-tb-btn.active {
   color: var(--green);
   border-color: rgba(0, 255, 136, 0.2);
+}
+
+.td-meas-toggle {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .td-tb-btn.primary {

@@ -1,3 +1,5 @@
+import FFT from 'fft.js';
+
 const USER_TEMPLATE_STORAGE_KEY = 'td:user-templates:v1';
 const TARGET_CURVES_API_PATH = '/api/target-curves';
 const TARGET_CURVES_STATIC_PATH = '/target_curves';
@@ -160,6 +162,60 @@ function pickSingleFile(accept) {
   });
 }
 
+function nextPow2(n) {
+  let p = 1;
+  while (p < n) p <<= 1;
+  return p;
+}
+
+function irToResponse(ir, sampleRate = 48000) {
+  const clean = Array.isArray(ir) ? ir.map((v) => Number(v) || 0) : [];
+  if (clean.length < 16) return [];
+
+  const n = nextPow2(clean.length);
+  const input = new Array(n).fill(0);
+  for (let i = 0; i < clean.length; i += 1) input[i] = clean[i];
+
+  const fft = new FFT(n);
+  const out = fft.createComplexArray();
+  fft.realTransform(out, input);
+  fft.completeSpectrum(out);
+
+  const half = Math.floor(n / 2);
+  const freqRes = sampleRate / n;
+  const dbBins = new Float64Array(half + 1);
+
+  for (let k = 0; k <= half; k += 1) {
+    const re = out[2 * k];
+    const im = out[2 * k + 1];
+    const mag = Math.hypot(re, im);
+    dbBins[k] = 20 * Math.log10(Math.max(mag, 1e-12));
+  }
+
+  const interpDb = (freq) => {
+    const idx = freq / freqRes;
+    const i0 = Math.max(0, Math.min(half - 1, Math.floor(idx)));
+    const i1 = i0 + 1;
+    const t = Math.max(0, Math.min(1, idx - i0));
+    return dbBins[i0] + (dbBins[i1] - dbBins[i0]) * t;
+  };
+
+  const MIN_FREQ = 10;
+  const MAX_FREQ = 24000;
+  const PPO = 48;
+  const SPL_OFFSET = 75.0;
+  const pts = [];
+  const minOct = Math.log2(MIN_FREQ);
+  const maxOct = Math.log2(MAX_FREQ);
+
+  for (let oct = minOct; oct <= maxOct + 1e-9; oct += 1 / PPO) {
+    const f = Math.pow(2, oct);
+    pts.push({ f, spl: interpDb(f) + SPL_OFFSET });
+  }
+
+  return pts;
+}
+
 export async function listTargetCurves() {
   const user = readUserTemplates();
   const userCurves = user
@@ -260,4 +316,59 @@ export async function importTargetCurveFile() {
   const text = await file.text();
   const name = file.name.replace(/\.[^.]+$/, '');
   return { name, text };
+}
+
+export async function importADYMeasurements() {
+  const file = await pickSingleFile('.ady,.json');
+  if (!file) return null;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch (error) {
+    throw new Error(`Invalid ADY file: ${error?.message || 'Unable to parse JSON.'}`);
+  }
+
+  const channels = Array.isArray(parsed?.detectedChannels) ? parsed.detectedChannels : [];
+  if (!channels.length) {
+    throw new Error('ADY file does not contain detectedChannels.');
+  }
+
+  const measurements = [];
+  for (const channel of channels) {
+    const commandId = String(channel?.commandId || '').trim();
+    const ir = channel?.responseData?.['0'];
+    if (!commandId || !Array.isArray(ir) || !ir.length) continue;
+    const pts = irToResponse(ir, 48000);
+    if (!pts.length) continue;
+    measurements.push({ name: commandId, pts });
+  }
+
+  if (!measurements.length) {
+    throw new Error('No valid channel impulse responses found in ADY file.');
+  }
+
+  return {
+    name: file.name.replace(/\.[^.]+$/, ''),
+    measurements,
+  };
+}
+
+export async function importFromREW() {
+  let response;
+  try {
+    response = await fetch('http://localhost:4735/measurements');
+  } catch (error) {
+    throw new Error(`REW API unavailable: ${error?.message || 'Network error.'}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`REW API unavailable: HTTP ${response.status}`);
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('Invalid REW API response');
+  }
 }

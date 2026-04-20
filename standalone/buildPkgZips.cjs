@@ -10,6 +10,7 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const RELEASE_DIR = path.join(ROOT_DIR, 'release');
 const STAGE_DIR = path.join(RELEASE_DIR, '.stage');
 const CURVES_SOURCE_DIR = path.join(ROOT_DIR, 'src', 'target_curves');
+const PACKAGE_JSON_PATH = path.join(ROOT_DIR, 'package.json');
 
 function runCommand(command, args, cwd = ROOT_DIR) {
   const result = spawnSync(command, args, {
@@ -24,6 +25,25 @@ function runCommand(command, args, cwd = ROOT_DIR) {
 
 function npmCommand() {
   return process.platform === 'win32' ? 'npm.cmd' : 'npm';
+}
+
+async function readPackageVersion() {
+  const raw = await fsp.readFile(PACKAGE_JSON_PATH, 'utf8');
+  const pkg = JSON.parse(raw);
+  const version = String(pkg?.version || '').trim();
+  if (!version) {
+    throw new Error('package.json version is missing.');
+  }
+  return version;
+}
+
+function normalizeVersion(version) {
+  const trimmed = String(version || '').trim().replace(/^v/i, '');
+  const safe = trimmed.replace(/[^0-9A-Za-z._-]/g, '-');
+  if (!safe) {
+    throw new Error(`Invalid release version: ${version}`);
+  }
+  return safe;
 }
 
 function detectHostTarget() {
@@ -77,7 +97,7 @@ async function copyCurvesInto(dirPath) {
   await fsp.cp(CURVES_SOURCE_DIR, path.join(dirPath, 'target_curves'), { recursive: true });
 }
 
-async function createZipForBinary(binaryFileName) {
+async function createZipForBinary(binaryFileName, releaseVersion) {
   const packageName = path.parse(binaryFileName).name;
   const packageDir = path.join(STAGE_DIR, `${packageName}-bundle`);
   await fsp.mkdir(packageDir, { recursive: true });
@@ -85,7 +105,7 @@ async function createZipForBinary(binaryFileName) {
   await fsp.copyFile(path.join(STAGE_DIR, binaryFileName), path.join(packageDir, binaryFileName));
   await copyCurvesInto(packageDir);
 
-  const zipFileName = `${packageName}.zip`;
+  const zipFileName = `${packageName}-v${releaseVersion}.zip`;
   const zipFilePath = path.join(RELEASE_DIR, zipFileName);
   runCommand('zip', ['-rq', zipFilePath, '.'], packageDir);
 
@@ -93,7 +113,7 @@ async function createZipForBinary(binaryFileName) {
   return zipFileName;
 }
 
-async function packageToZip(targets) {
+async function packageToZip(targets, releaseVersion) {
   const targetArg = targets.join(',');
   runCommand('pkg', ['.', '--targets', targetArg, '--out-path', STAGE_DIR]);
 
@@ -110,7 +130,7 @@ async function packageToZip(targets) {
 
   const outputZips = [];
   for (const binary of binaries) {
-    const zipName = await createZipForBinary(binary);
+    const zipName = await createZipForBinary(binary, releaseVersion);
     outputZips.push(zipName);
   }
 
@@ -120,12 +140,14 @@ async function packageToZip(targets) {
 
 async function main() {
   const targets = targetsForMode(mode);
+  const packageVersion = await readPackageVersion();
+  const releaseVersion = normalizeVersion(process.env.TD_RELEASE_VERSION || packageVersion);
 
   runCommand(npmCommand(), ['exec', '--', 'vite', 'build']);
   await cleanReleaseDir();
-  const zips = await packageToZip(targets);
+  const zips = await packageToZip(targets, releaseVersion);
 
-  console.log('\nCreated zip artifacts:');
+  console.log(`\nCreated zip artifacts for version ${releaseVersion}:`);
   zips.forEach((zipName) => {
     console.log(`- ${path.join('release', zipName)}`);
   });

@@ -107,6 +107,41 @@ export function makeGrid(resKind) {
   return out;
 }
 
+export function smoothSeries(freqs, vals, frac) {
+  if (frac <= 0) return vals.slice();
+  const sigma = frac / 2.5;
+  const logf = freqs.map((f) => Math.log2(f));
+  const out = new Array(vals.length).fill(0);
+  for (let i = 0; i < vals.length; i++) {
+    let wsum = 0;
+    let vsum = 0;
+    const li = logf[i];
+    for (let j = 0; j < vals.length; j++) {
+      const d = logf[j] - li;
+      if (Math.abs(d) > 3 * sigma) continue;
+      const w = Math.exp(-0.5 * (d / sigma) * (d / sigma));
+      wsum += w;
+      vsum += w * vals[j];
+    }
+    out[i] = vsum / (wsum || 1);
+  }
+  return out;
+}
+
+export function smoothingToFrac(mode) {
+  const map = {
+    none: 0,
+    '1/48': 1 / 48,
+    '1/24': 1 / 24,
+    '1/12': 1 / 12,
+    '1/6': 1 / 6,
+    '1/3': 1 / 3,
+    '1/2': 0.5,
+    '1/1': 1,
+  };
+  return map[mode] ?? 0;
+}
+
 export function parseREWText(text) {
   const lines = text.split(/\r?\n/);
   const pts = [];
@@ -203,6 +238,18 @@ export function computeTargetAt(f, t) {
 export function buildTargetSeries(target) {
   const grid = makeGrid('1/24');
   return grid.map((f) => ({ f, y: computeTargetAt(f, target) }));
+}
+
+export function buildSmoothedMeasurement(m) {
+  if (m.smoothing === 'none') {
+    return m.pts.map((p) => ({ f: p.f, y: p.spl ?? p.val ?? p.y }));
+  }
+  const grid = makeGrid('1/24');
+  const pts = m.pts.map((p) => ({ f: p.f, val: p.spl ?? p.val }));
+  const vals = grid.map((f) => interpLog(pts, f));
+  const frac = smoothingToFrac(m.smoothing || 'none');
+  const sm = smoothSeries(grid, vals, frac);
+  return grid.map((f, i) => ({ f, y: sm[i] }));
 }
 
 export function getInteractiveHandles(target) {
