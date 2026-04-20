@@ -1,0 +1,214 @@
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #0d0e18;
+  --bg-elevated: #121320;
+  --border: rgba(0, 212, 255, 0.15);
+  --border-bright: rgba(0, 212, 255, 0.4);
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0, 212, 255, 0.5);
+  --cyan-glow: rgba(0, 212, 255, 0.12);
+  --amber: #ffb800;
+  --amber-dim: rgba(255, 184, 0, 0.5);
+  --green: #00ff88;
+  --green-dim: rgba(0, 255, 136, 0.5);
+  --red: #ff3355;
+  --orange: #ff6622;
+  --text: #e8e8f0;
+  --text-dim: #7878a0;
+  --text-muted: #404060;
+  --dim: rgba(120, 120, 160, 0.65);
+  --muted: #2a2a45;
+  --card: #0d0e18;
+  --font-display: 'Orbitron', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-body: 'Rajdhani', sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection only where explicitly needed */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* ── Channel chips (picker item rows) ── */
+.picker-channel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.picker-channel-chip {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.06em;
+  color: var(--cyan);
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.22);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+.picker-channel-chip-dim {
+  color: var(--text-dim);
+  background: rgba(120, 120, 160, 0.08);
+  border-color: rgba(120, 120, 160, 0.18);
+}
+
+/* ── Channel mismatch error modal ── */
+.ch-mismatch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 15, 0.85);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.ch-mismatch-modal {
+  width: min(580px, 100%);
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 51, 85, 0.45);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(255, 51, 85, 0.12) inset, 0 8px 40px rgba(0, 0, 0, 0.6);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ch-mismatch-title {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.ch-mismatch-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ch-mismatch-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ch-mismatch-label {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ch-mismatch-count {
+  color: var(--text-muted);
+}
+
+.ch-mismatch-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ch-mismatch-chip {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  background: rgba(0, 255, 136, 0.07);
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.ch-mismatch-chip-missing {
+  color: var(--red);
+  background: rgba(255, 51, 85, 0.1);
+  border-color: rgba(255, 51, 85, 0.35);
+}
+
+.ch-mismatch-chip-extra {
+  color: var(--orange);
+  background: rgba(255, 102, 34, 0.1);
+  border-color: rgba(255, 102, 34, 0.35);
+}
+
+.ch-mismatch-error {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--text-dim);
+  background: rgba(255, 51, 85, 0.06);
+  border: 1px solid rgba(255, 51, 85, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.5;
+}
+
+.ch-mismatch-error-label {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.ch-mismatch-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ch-mismatch-btn {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(255, 51, 85, 0.12);
+  border: 1px solid rgba(255, 51, 85, 0.4);
+  border-radius: 7px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ch-mismatch-btn:hover {
+  background: rgba(255, 51, 85, 0.22);
+  border-color: rgba(255, 51, 85, 0.7);
+}
