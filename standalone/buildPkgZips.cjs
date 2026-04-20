@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const { spawnSync } = require('node:child_process');
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
@@ -21,6 +20,10 @@ function runCommand(command, args, cwd = ROOT_DIR) {
   if (result.status !== 0) {
     process.exit(result.status || 1);
   }
+}
+
+function npmCommand() {
+  return process.platform === 'win32' ? 'npm.cmd' : 'npm';
 }
 
 function detectHostTarget() {
@@ -118,7 +121,7 @@ async function packageToZip(targets) {
 async function main() {
   const targets = targetsForMode(mode);
 
-  runCommand('npm', ['run', 'build']);
+  runCommand(npmCommand(), ['exec', '--', 'vite', 'build']);
   await cleanReleaseDir();
   const zips = await packageToZip(targets);
 

@@ -9,6 +9,14 @@ const { spawn } = require('node:child_process');
 const HOST = process.env.TD_HOST || '127.0.0.1';
 const PORT = Number(process.env.TD_PORT || 5180);
 const SHOULD_OPEN_BROWSER = process.env.TD_OPEN_BROWSER !== '0';
+const SERVER_URL = `http://${HOST}:${PORT}`;
+
+function browserUrlForHost(host, port) {
+  if (host === '0.0.0.0' || host === '::') {
+    return `http://127.0.0.1:${port}`;
+  }
+  return `http://${host}:${port}`;
+}
 
 const DIST_ROOT = path.resolve(__dirname, '..', 'dist');
 const RUNTIME_ROOT = process.pkg ? path.dirname(process.execPath) : path.resolve(__dirname, '..');
@@ -269,13 +277,22 @@ function stopServer() {
 }
 
 server.on('error', (error) => {
+  if (error?.code === 'EADDRINUSE') {
+    const existingUrl = browserUrlForHost(HOST, PORT);
+    console.log(`Port ${PORT} is already in use. Opening existing instance at ${existingUrl}.`);
+    if (SHOULD_OPEN_BROWSER) {
+      openBrowser(existingUrl);
+    }
+    process.exit(0);
+    return;
+  }
+
   console.error(`Server failed: ${error.message}`);
   process.exit(1);
 });
 
 server.listen(PORT, HOST, () => {
-  const url = `http://${HOST}:${PORT}`;
-  console.log(`Target Designer running at ${url}`);
+  console.log(`Target Designer running at ${SERVER_URL}`);
   console.log(`Serving built assets from ${DIST_ROOT}`);
   console.log(`Serving target curves from ${TARGET_CURVES_ROOT}`);
   if (process.stdin.isTTY) {
@@ -293,7 +310,7 @@ server.listen(PORT, HOST, () => {
   }
 
   if (SHOULD_OPEN_BROWSER) {
-    openBrowser(url);
+    openBrowser(browserUrlForHost(HOST, PORT));
   }
 });
 

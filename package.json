@@ -12,17 +12,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:zip": "npm run build && rm -f build.zip && cd dist && zip -r ../build.zip .",
-    "preview": "vite preview --host",
-    "standalone": "node standalone/server.cjs",
-    "build:pkg": "npm run build:pkg:all",
     "build:pkg:host": "node standalone/buildPkgZips.cjs host",
     "build:pkg:mac": "node standalone/buildPkgZips.cjs mac",
     "build:pkg:win": "node standalone/buildPkgZips.cjs win",
     "build:pkg:linux": "node standalone/buildPkgZips.cjs linux",
     "build:pkg:all": "node standalone/buildPkgZips.cjs all",
-    "build:pkg:zip": "npm run build:pkg:all"
+    "build:pkg:zip": "node standalone/buildPkgZips.cjs all"
   },
   "dependencies": {
     "react": "^18.3.1",
