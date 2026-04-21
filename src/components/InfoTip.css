@@ -8,12 +8,12 @@
 }
 
 .infotip-icon {
-  width: 12px;
-  height: 12px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   border: 1px solid rgba(0, 212, 255, 0.45);
   color: rgba(0, 212, 255, 0.6);
-  font-size: 7.5px;
+  font-size: 0.6rem;
   font-style: normal;
   font-family: var(--font-mono);
   font-weight: bold;
@@ -45,10 +45,10 @@
   border-radius: 3px;
   padding: 8px 10px;
   min-width: 190px;
-  max-width: 255px;
+  max-width: 355px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 0.7rem;
   color: #9ba3bf;
   line-height: 1.65;
   pointer-events: auto;
@@ -71,14 +71,14 @@
 }
 
 .infotip-pop-title {
-  font-size: 7.5px;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--cyan);
 }
 
 .infotip-pop-close {
-  font-size: 10px;
+  font-size: 0.7rem;
   color: var(--text-dim);
   cursor: pointer;
   padding: 0 2px;

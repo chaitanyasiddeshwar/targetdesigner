@@ -32,7 +32,7 @@
 .td-btn {
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 0.48rem;
+  font-size: 0.6rem;
   letter-spacing: 0.1em;
   padding: 4px 0;
   cursor: pointer;
@@ -331,7 +331,7 @@
   position: absolute;
   right: 14px;
   bottom: 14px;
-  width: 260px;
+  width: 360px;
   max-height: 58%;
   overflow-y: auto;
   background: var(--bg-card);
@@ -430,13 +430,13 @@
   background: var(--bg-card);
   border: 1px solid var(--border-bright);
   padding: 20px;
-  min-width: 320px;
-  max-width: 480px;
+  min-width: 420px;
+  max-width: 580px;
 }
 
 .td-dialog-title {
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   color: var(--cyan);
   text-transform: uppercase;
@@ -445,14 +445,14 @@
 
 .td-dialog-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 10px;
   align-items: center;
 }
 
 .td-dialog-label {
   font-family: var(--font-mono);
-  font-size: 0.52rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
   min-width: 80px;
 }
@@ -464,7 +464,7 @@
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 0.56rem;
+  font-size: 0.7rem;
 }
 
 .td-dialog-input {
@@ -474,7 +474,7 @@
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 0.56rem;
+  font-size: 0.7rem;
   outline: none;
 }
 
